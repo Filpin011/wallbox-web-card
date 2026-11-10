@@ -1,0 +1,57 @@
+name: Release
+
+# release-please keeps a release PR (package.json version + CHANGELOG.md) from the Conventional Commits on main.
+# Merging it tags vX.Y.Z and creates the GitHub release; the job below builds the card and attaches
+# dist/wallbox-web-card.js, which is what HACS downloads. Run it manually with a tag to (re)attach the file to an
+# existing release (e.g. the first v0.1.0 created by hand).
+# Only GITHUB_TOKEN is used (repo setting: Actions › "Allow GitHub Actions to create and approve pull requests").
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build and attach the card to (e.g. v0.1.0)
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  release-please:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  build-and-attach:
+    needs: release-please
+    if: always() && (needs.release-please.outputs.release_created == 'true' || inputs.tag != '')
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.release-please.outputs.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Attach the card to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" dist/wallbox-web-card.js --clobber

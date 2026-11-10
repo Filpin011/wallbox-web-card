@@ -1,0 +1,6 @@
+{
+  "name": "Wallbox WEB card",
+  "filename": "wallbox-web-card.js",
+  "homeassistant": "2026.11.0",
+  "hacs": "2.0.0"
+}

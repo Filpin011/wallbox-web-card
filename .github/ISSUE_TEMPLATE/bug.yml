@@ -1,0 +1,32 @@
+name: Bug report / Segnalazione
+description: The card does not work as expected. / La card non funziona.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Independent, unofficial project. Never paste tokens, public URLs or serial numbers.
+        Problems with sensors or commands themselves belong to https://github.com/Filpin011/ha-wallbox-web/issues
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Cosa è successo?
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Card version / Home Assistant version / Browser or app
+      placeholder: "0.1.0 / 2026.11.1 / Companion app iOS"
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Card YAML
+      render: yaml
+  - type: textarea
+    id: console
+    attributes:
+      label: Browser console errors
+      render: text

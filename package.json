@@ -1,0 +1,23 @@
+{
+  "name": "wallbox-web-card",
+  "version": "0.1.0",
+  "description": "Home Assistant dashboard card for Wallbox WEB stations (unofficial, independent project).",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "node --test test/",
+    "demo": "node build.mjs && npx --yes http-server -p 5050 -c-1 ."
+  },
+  "dependencies": {
+    "lit": "^3.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.10",
+    "typescript": "^5.9.3"
+  }
+}

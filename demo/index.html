@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wallbox WEB card – demo</title>
+    <style>
+      :root { color-scheme: dark; }
+      body { margin: 0; padding: 24px 16px; background: #111318; font-family: Inter, system-ui, sans-serif; color: #f4f5f7; }
+      h1 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+      p { margin: 0 0 20px; font-size: 13px; color: #a3a9b3; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; max-width: 1480px; }
+      .cell > span { display: block; font-size: 12px; color: #7c838e; margin: 0 0 6px 4px; }
+      .light { background: #fafafa; padding: 12px; border-radius: 16px; }
+      ha-card { display: block; }
+    </style>
+  </head>
+  <body>
+    <h1>Wallbox WEB card</h1>
+    <p>Demo con dati simulati (nessun Home Assistant): stati In carica, Disponibile, Sospesa, Guasto, Non raggiungibile, tema chiaro di HA.</p>
+    <div class="grid" id="grid"></div>
+    <script type="module">
+      // Minimal stand-in of Home Assistant's <ha-card> (in HA the real element is provided by the frontend).
+      if (!customElements.get("ha-card")) {
+        customElements.define("ha-card", class extends HTMLElement {});
+      }
+      await import("../dist/wallbox-web-card.js");
+
+      const LABELS = {
+        status: { charging: "In carica", idle: "Disponibile", suspended_evse: "Sospesa dalla colonnina", faulted: "Guasto", unavailable: "Non disponibile" },
+        behaviour_mode: { personal: "Personale", free: "Libera" },
+        error: { none: "Nessun errore", hgtp: "HGTP – temperatura elevata" },
+      };
+
+      function makeHass(name, s) {
+        const dev = "dev-" + name;
+        const ents = {};
+        const states = {};
+        const add = (platform, key, state, attrs = {}) => {
+          const id = `${platform}.${name.toLowerCase()}_${key}`;
+          ents[id] = { entity_id: id, device_id: dev, platform: "wallbox_web", translation_key: key };
+          states[id] = { entity_id: id, state: String(state), attributes: attrs };
+        };
+        add("sensor", "status", s.status);
+        add("sensor", "power", s.power, { unit_of_measurement: "kW" });
+        add("sensor", "max_available_power", 7.4, { unit_of_measurement: "kW" });
+        add("sensor", "power_limit", s.limit ?? 6.9, { unit_of_measurement: "kW" });
+        add("sensor", "session_energy", s.energy, { unit_of_measurement: "kWh" });
+        add("sensor", "session_duration", s.minutes, { unit_of_measurement: "min" });
+        add("sensor", "error", s.error ?? "none");
+        add("binary_sensor", "problem", s.error && s.error !== "none" ? "on" : "off");
+        add("select", "behaviour_mode", s.mode ?? "personal");
+        add("sensor", "last_charge_energy", 18.45, { unit_of_measurement: "kWh" });
+        add("sensor", "last_charge_cost", 4.43, { unit_of_measurement: "EUR" });
+        add("sensor", "last_charge_saving", 12.1, { unit_of_measurement: "EUR" });
+        for (const b of ["start", "pause", "resume", "stop"]) add("button", b, s.buttons.includes(b) ? "unknown" : "unavailable");
+        const t0 = Date.now() - 95 * 60_000;
+        const samples = s.curve
+          ? Array.from({ length: 191 }, (_, i) => ({
+              t: t0 + i * 30_000,
+              powerW: i < 4 ? i * 1800 : Math.max(0, 7200 - Math.max(0, i - 150) * 80 + Math.sin(i / 3) * 60),
+            }))
+          : [];
+        return {
+          states,
+          entities: ents,
+          devices: { [dev]: { id: dev, name } },
+          locale: { language: "it" },
+          language: "it",
+          formatEntityState(stateObj) {
+            const key = ents[stateObj.entity_id]?.translation_key;
+            return LABELS[key]?.[stateObj.state] ?? stateObj.state;
+          },
+          async callService(domain, service, data) {
+            console.log("callService", domain, service, data);
+          },
+          async callWS(msg) {
+            if (msg.type === "wallbox_web/charge_curve") return { charge: s.curve ? { id: 8 } : null, samples };
+            return {};
+          },
+        };
+      }
+
+      const scenarios = [
+        ["Cupra · In carica", "Cupra", { status: "charging", power: 7.2, energy: 11.4, minutes: 95, buttons: ["pause", "stop"], curve: true }],
+        ["Garage · Disponibile", "Garage", { status: "idle", power: 0, energy: 0, minutes: 0, buttons: ["start"] }],
+        ["Ospiti · Sospesa", "Ospiti", { status: "suspended_evse", power: 0, energy: 6.3, minutes: 52, buttons: ["resume", "stop"], curve: true, mode: "free" }],
+        ["Box · Guasto", "Box", { status: "faulted", power: 0, energy: 0, minutes: 0, buttons: [], error: "hgtp" }],
+        ["Cantina · Non raggiungibile", "Cantina", { status: "unavailable", power: 0, energy: 0, minutes: 0, buttons: [] }],
+        ["Cupra · tema chiaro di HA", "Cupra", { status: "charging", power: 3.6, energy: 2.1, minutes: 25, buttons: ["pause", "stop"], curve: true }, "theme"],
+      ];
+
+      const grid = document.getElementById("grid");
+      for (const [label, name, s, appearance] of scenarios) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.innerHTML = `<span>${label}</span>`;
+        const host = appearance === "theme" ? Object.assign(document.createElement("div"), { className: "light" }) : cell;
+        const card = document.createElement("wallbox-web-card");
+        card.setConfig({ type: "custom:wallbox-web-card", device_id: "dev-" + name, appearance: appearance ?? "app" });
+        card.hass = makeHass(name, s);
+        if (appearance === "theme") {
+          card.style.setProperty("--primary-text-color", "#212121");
+          card.style.setProperty("--secondary-text-color", "#727272");
+          card.style.setProperty("--ha-card-background", "#ffffff");
+          card.style.setProperty("--secondary-background-color", "#f2f2f2");
+          host.appendChild(card);
+          cell.appendChild(host);
+        } else {
+          cell.appendChild(card);
+        }
+        grid.appendChild(cell);
+      }
+      document.body.dataset.ready = "1";
+    </script>
+  </body>
+</html>

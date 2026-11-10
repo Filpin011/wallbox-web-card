@@ -1,39 +1,8 @@
-// Card texts (Italian + English). Entity states are formatted by Home Assistant (hass.formatEntityState),
-// so the station status uses the integration's own translations.
+// Card texts: English (default, and the fallback for every other language) and Italian.
+// Entity states are formatted by Home Assistant (hass.formatEntityState), so the station status uses the
+// integration's own translations.
 
-const it = {
-  power: "Potenza",
-  energy: "Energia erogata",
-  duration: "Durata",
-  hoursMinutes: "h:min",
-  maxAvailable: "Max disponibile",
-  limit: "Limite",
-  start: "Avvia",
-  pause: "Pausa",
-  resume: "Riprendi",
-  stop: "Ferma",
-  curve: "Curva di potenza",
-  curveEmpty: "Nessuna ricarica in corso",
-  lastCharge: "Ultima ricarica",
-  saving: "risparmio",
-  pickStation: "Scegli una colonnina Wallbox WEB nell'editor della card.",
-  notFound: "Colonnina non trovata: controlla l'integrazione Wallbox WEB.",
-  offline: "Non raggiungibile",
-  error: "Errore",
-  // editor
-  device_id: "Colonnina",
-  name: "Nome (facoltativo)",
-  show_curve: "Curva di potenza",
-  show_actions: "Pulsanti di comando",
-  show_last_charge: "Ultima ricarica",
-  curve_hours: "Ore di storico per la curva",
-  appearance: "Aspetto",
-  appearanceApp: "Wallbox WEB (scuro, vetro)",
-  appearanceTheme: "Tema di Home Assistant",
-  commandFailed: "Comando non riuscito",
-};
-
-const en: typeof it = {
+const en = {
   power: "Power",
   energy: "Energy delivered",
   duration: "Duration",
@@ -52,20 +21,79 @@ const en: typeof it = {
   notFound: "Station not found: check the Wallbox WEB integration.",
   offline: "Unreachable",
   error: "Error",
+  // editor
   device_id: "Station",
   name: "Name (optional)",
+  layout: "Layout",
+  layoutFull: "Full (gauge and commands)",
+  layoutCompact: "Compact (no gauge)",
+  layoutMinimal: "Minimal (one row, like a tile)",
+  content: "Content",
+  interactions: "Interactions",
+  show_status: "Status",
+  show_gauge: "Power gauge",
+  show_limits: "Max power and limit",
+  show_tiles: "Energy and duration",
   show_curve: "Power curve",
   show_actions: "Command buttons",
   show_last_charge: "Last charge",
   curve_hours: "Hours of history for the curve",
+  tap_action: "Tap action",
+  tapHelper: "Default: details of the Power sensor.",
   appearance: "Appearance",
   appearanceApp: "Wallbox WEB (dark, glass)",
   appearanceTheme: "Home Assistant theme",
   commandFailed: "Command failed",
+  cardDescription: "Station status with power gauge, commands and charge curve (Wallbox WEB).",
 };
 
-export type Strings = typeof it;
+const it: typeof en = {
+  power: "Potenza",
+  energy: "Energia erogata",
+  duration: "Durata",
+  hoursMinutes: "h:min",
+  maxAvailable: "Max disponibile",
+  limit: "Limite",
+  start: "Avvia",
+  pause: "Pausa",
+  resume: "Riprendi",
+  stop: "Ferma",
+  curve: "Curva di potenza",
+  curveEmpty: "Nessuna ricarica in corso",
+  lastCharge: "Ultima ricarica",
+  saving: "risparmio",
+  pickStation: "Scegli una colonnina Wallbox WEB nell'editor della card.",
+  notFound: "Colonnina non trovata: controlla l'integrazione Wallbox WEB.",
+  offline: "Non raggiungibile",
+  error: "Errore",
+  device_id: "Colonnina",
+  name: "Nome (facoltativo)",
+  layout: "Layout",
+  layoutFull: "Completo (indicatore e comandi)",
+  layoutCompact: "Compatto (senza indicatore)",
+  layoutMinimal: "Minimo (una riga, come un riquadro)",
+  content: "Contenuti",
+  interactions: "Interazioni",
+  show_status: "Stato",
+  show_gauge: "Indicatore di potenza",
+  show_limits: "Potenza massima e limite",
+  show_tiles: "Energia e durata",
+  show_curve: "Curva di potenza",
+  show_actions: "Pulsanti di comando",
+  show_last_charge: "Ultima ricarica",
+  curve_hours: "Ore di storico per la curva",
+  tap_action: "Azione al tocco",
+  tapHelper: "Predefinita: dettagli del sensore Potenza.",
+  appearance: "Aspetto",
+  appearanceApp: "Wallbox WEB (scuro, vetro)",
+  appearanceTheme: "Tema di Home Assistant",
+  commandFailed: "Comando non riuscito",
+  cardDescription: "Stato della colonnina con indicatore di potenza, comandi e curva di ricarica (Wallbox WEB).",
+};
 
+export type Strings = typeof en;
+
+/** Texts in the user's Home Assistant language: Italian for `it*`, English otherwise. */
 export function strings(language: string | undefined): Strings {
   return (language ?? "").toLowerCase().startsWith("it") ? it : en;
 }

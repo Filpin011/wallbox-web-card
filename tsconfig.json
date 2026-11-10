@@ -11,7 +11,8 @@
     "useDefineForClassFields": false,
     "skipLibCheck": true,
     "noEmit": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true
   },
   "include": ["src"]
 }

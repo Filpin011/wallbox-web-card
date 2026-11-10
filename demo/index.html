@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,8 +8,19 @@
       :root { color-scheme: dark; }
       body { margin: 0; padding: 24px 16px; background: #111318; font-family: Inter, system-ui, sans-serif; color: #f4f5f7; }
       h1 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+      h2 { font-size: 14px; font-weight: 600; margin: 28px 0 10px; color: #a3a9b3; }
       p { margin: 0 0 20px; font-size: 13px; color: #a3a9b3; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; max-width: 1480px; }
+      section { max-width: 1480px; padding: 4px 0 8px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+      .grid.tiles { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px 16px; }
+      /* sections view: a "minimal" card is half a section wide and one 56 px row high */
+      .grid.tiles .card-host { height: 56px; }
+      .overview { display: inline-grid; grid-template-columns: 360px 360px 300px; gap: 20px; align-items: start; padding: 16px; background: #111318; }
+      .stack { display: grid; gap: 16px; }
+      .stack.tiles { gap: 8px; }
+      .stack.tiles .card-host { height: 56px; }
+      .col { font-size: 12px; color: #7c838e; margin: 0 0 -6px 4px; font-family: ui-monospace, monospace; }
+      .stack.tiles .col { margin-bottom: 2px; }
       .cell > span { display: block; font-size: 12px; color: #7c838e; margin: 0 0 6px 4px; }
       .light { background: #fafafa; padding: 12px; border-radius: 16px; }
       ha-card { display: block; }
@@ -17,20 +28,42 @@
   </head>
   <body>
     <h1>Wallbox WEB card</h1>
-    <p>Demo con dati simulati (nessun Home Assistant): stati In carica, Disponibile, Sospesa, Guasto, Non raggiungibile, tema chiaro di HA.</p>
-    <div class="grid" id="grid"></div>
+    <p id="intro"></p>
+
+    <section id="overview"><div class="overview"><div class="stack" id="ov-full"><span class="col">layout: full</span></div><div class="stack" id="ov-compact"><span class="col">layout: compact</span></div><div class="stack tiles" id="ov-minimal"><span class="col">layout: minimal</span></div></div></section>
+    <h2 id="h-full">layout: full</h2>
+    <section id="full"><div class="grid" id="grid-full"></div></section>
+    <h2 id="h-compact">layout: compact</h2>
+    <section id="compact"><div class="grid" id="grid-compact"></div></section>
+    <h2 id="h-minimal">layout: minimal</h2>
+    <section id="minimal"><div class="grid tiles" id="grid-minimal"></div></section>
+
     <script type="module">
       // Minimal stand-in of Home Assistant's <ha-card> (in HA the real element is provided by the frontend).
       if (!customElements.get("ha-card")) {
         customElements.define("ha-card", class extends HTMLElement {});
       }
+      const lang = new URLSearchParams(location.search).get("lang") === "it" ? "it" : "en";
+      document.documentElement.lang = lang;
       await import("../dist/wallbox-web-card.js");
 
-      const LABELS = {
-        status: { charging: "In carica", idle: "Disponibile", suspended_evse: "Sospesa dalla colonnina", faulted: "Guasto", unavailable: "Non disponibile" },
-        behaviour_mode: { personal: "Personale", free: "Libera" },
-        error: { none: "Nessun errore", hgtp: "HGTP – temperatura elevata" },
-      };
+      const L = {
+        en: {
+          intro: "Mocked data, no Home Assistant needed: Charging, Idle, Suspended, Faulted, Unreachable and the Home Assistant light theme, in the three layouts. Italian: ?lang=it",
+          status: { charging: "Charging", idle: "Idle", suspended_evse: "Suspended by station", faulted: "Faulted", unavailable: "Unavailable" },
+          behaviour_mode: { personal: "Personal", free: "Free" },
+          error: { none: "No error", hgtp: "HGTP – high temperature" },
+          names: { charging: "Charging", idle: "Idle", suspended: "Suspended", faulted: "Faulted", unreachable: "Unreachable", light: "Home Assistant light theme" },
+        },
+        it: {
+          intro: "Dati simulati, senza Home Assistant: In carica, Disponibile, Sospesa, Guasto, Non raggiungibile e tema chiaro di Home Assistant, nei tre layout.",
+          status: { charging: "In carica", idle: "Disponibile", suspended_evse: "Sospesa dalla colonnina", faulted: "Guasto", unavailable: "Non disponibile" },
+          behaviour_mode: { personal: "Personale", free: "Libera" },
+          error: { none: "Nessun errore", hgtp: "HGTP – temperatura elevata" },
+          names: { charging: "In carica", idle: "Disponibile", suspended: "Sospesa", faulted: "Guasto", unreachable: "Non raggiungibile", light: "tema chiaro di HA" },
+        },
+      }[lang];
+      document.getElementById("intro").textContent = L.intro;
 
       function makeHass(name, s) {
         const dev = "dev-" + name;
@@ -65,11 +98,11 @@
           states,
           entities: ents,
           devices: { [dev]: { id: dev, name } },
-          locale: { language: "it" },
-          language: "it",
+          locale: { language: lang },
+          language: lang,
           formatEntityState(stateObj) {
             const key = ents[stateObj.entity_id]?.translation_key;
-            return LABELS[key]?.[stateObj.state] ?? stateObj.state;
+            return L[key]?.[stateObj.state] ?? stateObj.state;
           },
           async callService(domain, service, data) {
             console.log("callService", domain, service, data);
@@ -81,35 +114,53 @@
         };
       }
 
-      const scenarios = [
-        ["Cupra · In carica", "Cupra", { status: "charging", power: 7.2, energy: 11.4, minutes: 95, buttons: ["pause", "stop"], curve: true }],
-        ["Garage · Disponibile", "Garage", { status: "idle", power: 0, energy: 0, minutes: 0, buttons: ["start"] }],
-        ["Ospiti · Sospesa", "Ospiti", { status: "suspended_evse", power: 0, energy: 6.3, minutes: 52, buttons: ["resume", "stop"], curve: true, mode: "free" }],
-        ["Box · Guasto", "Box", { status: "faulted", power: 0, energy: 0, minutes: 0, buttons: [], error: "hgtp" }],
-        ["Cantina · Non raggiungibile", "Cantina", { status: "unavailable", power: 0, energy: 0, minutes: 0, buttons: [] }],
-        ["Cupra · tema chiaro di HA", "Cupra", { status: "charging", power: 3.6, energy: 2.1, minutes: 25, buttons: ["pause", "stop"], curve: true }, "theme"],
-      ];
+      const S = {
+        charging: ["Cupra", { status: "charging", power: 7.2, energy: 11.4, minutes: 95, buttons: ["pause", "stop"], curve: true }],
+        idle: ["Garage", { status: "idle", power: 0, energy: 0, minutes: 0, buttons: ["start"] }],
+        suspended: ["Guests", { status: "suspended_evse", power: 0, energy: 6.3, minutes: 52, buttons: ["resume", "stop"], curve: true, mode: "free" }],
+        faulted: ["Box", { status: "faulted", power: 0, energy: 0, minutes: 0, buttons: [], error: "hgtp" }],
+        unreachable: ["Cellar", { status: "unavailable", power: 0, energy: 0, minutes: 0, buttons: [] }],
+        light: ["Cupra", { status: "charging", power: 3.6, energy: 2.1, minutes: 25, buttons: ["pause", "stop"], curve: true }, "theme"],
+      };
 
-      const grid = document.getElementById("grid");
-      for (const [label, name, s, appearance] of scenarios) {
+      function addCard(parent, key, config, withLabel = true) {
+        const [name, s, appearance] = S[key];
         const cell = document.createElement("div");
         cell.className = "cell";
-        cell.innerHTML = `<span>${label}</span>`;
-        const host = appearance === "theme" ? Object.assign(document.createElement("div"), { className: "light" }) : cell;
+        if (withLabel) cell.innerHTML = `<span>${name} · ${L.names[key]}</span>`;
+        const host = Object.assign(document.createElement("div"), { className: "card-host" });
         const card = document.createElement("wallbox-web-card");
-        card.setConfig({ type: "custom:wallbox-web-card", device_id: "dev-" + name, appearance: appearance ?? "app" });
+        card.setConfig({ type: "custom:wallbox-web-card", device_id: "dev-" + name, appearance: appearance ?? "app", ...config });
         card.hass = makeHass(name, s);
         if (appearance === "theme") {
           card.style.setProperty("--primary-text-color", "#212121");
           card.style.setProperty("--secondary-text-color", "#727272");
           card.style.setProperty("--ha-card-background", "#ffffff");
           card.style.setProperty("--secondary-background-color", "#f2f2f2");
+          const light = Object.assign(document.createElement("div"), { className: "light" });
+          host.appendChild(card);
+          light.appendChild(host);
+          cell.appendChild(light);
+          if (config.layout === "minimal") host.style.height = "56px";
+        } else {
           host.appendChild(card);
           cell.appendChild(host);
-        } else {
-          cell.appendChild(card);
         }
-        grid.appendChild(cell);
+        parent.appendChild(cell);
+      }
+
+      const keys = Object.keys(S);
+      for (const layout of ["full", "compact", "minimal"]) {
+        const grid = document.getElementById(`grid-${layout}`);
+        for (const key of keys) addCard(grid, key, { layout });
+      }
+      // overview (docs/screenshot.png): one column per layout
+      addCard(document.getElementById("ov-full"), "charging", { layout: "full" }, false);
+      addCard(document.getElementById("ov-compact"), "charging", { layout: "compact" }, false);
+      addCard(document.getElementById("ov-compact"), "suspended", { layout: "compact", show_limits: true }, false);
+      addCard(document.getElementById("ov-compact"), "idle", { layout: "compact" }, false);
+      for (const key of ["charging", "idle", "suspended", "faulted", "unreachable"]) {
+        addCard(document.getElementById("ov-minimal"), key, { layout: "minimal" }, false);
       }
       document.body.dataset.ready = "1";
     </script>

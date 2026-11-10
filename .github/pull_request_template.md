@@ -5,6 +5,6 @@
 ## Checklist
 
 - [ ] `npm run typecheck`, `npm test`, `npm run build` pass
-- [ ] Checked in `demo/index.html` (dark and HA theme) – screenshot attached for visual changes
-- [ ] Italian and English texts updated (`src/localize.ts`)
+- [ ] Checked in `demo/index.html` (all layouts, dark and HA theme) – screenshot attached for visual changes
+- [ ] English and Italian texts updated (`src/localize.ts`)
 - [ ] No private data (URLs, IPs, serials, tokens) in code or screenshots

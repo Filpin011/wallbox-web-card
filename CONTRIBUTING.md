@@ -21,7 +21,7 @@ npm run typecheck
 npm test          # unit tests of the pure helpers (node --test)
 npm run build     # dist/wallbox-web-card.js
 npm run watch     # rebuild on change
-npm run demo      # build + serve; open http://localhost:5050/demo/ (mocked hass, no Home Assistant needed)
+npm run demo      # build + serve; open http://localhost:5050/demo/ (mocked hass, all layouts; ?lang=it for Italian)
 ```
 
 To try it in a real Home Assistant: copy `dist/wallbox-web-card.js` to `/config/www/` and add the resource
@@ -30,6 +30,10 @@ To try it in a real Home Assistant: copy `dist/wallbox-web-card.js` to `/config/
 ## Guidelines
 
 - Lit 3, TypeScript strict, one bundled ES module (esbuild). No runtime dependencies besides Lit.
-- Use `hass.formatEntityState` for entity states (the integration translates them); card texts in `src/localize.ts`.
+- Use `hass.formatEntityState` for entity states (the integration translates them); card texts in `src/localize.ts`
+  (English is the default and the fallback for every language; Italian is a localisation).
+- Options, defaults per layout and sizing live in `src/config.ts`, the visual editor schema in `src/editor.ts`; both
+  are unit-tested (`test/config.test.ts`).
+- After a visual change, regenerate the screenshots in `docs/` from the demo (overview + one per layout).
 - Keep the look of the Wallbox WEB app (tokens in `src/styles.ts`) and respect *Reduce motion* / *Reduce
   transparency*.

@@ -1,5 +1,5 @@
-name: Bug report / Segnalazione
-description: The card does not work as expected. / La card non funziona.
+name: Bug report
+description: The card does not work as expected.
 labels: [bug]
 body:
   - type: markdown
@@ -10,7 +10,7 @@ body:
   - type: textarea
     id: what
     attributes:
-      label: What happened? / Cosa è successo?
+      label: What happened?
     validations:
       required: true
   - type: input

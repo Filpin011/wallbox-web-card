@@ -198,16 +198,90 @@ export const cardStyles = css`
   .last .save { color: var(--wc-accent); font-weight: 600; }
 
   .placeholder { padding: 24px 16px; color: var(--wc-text-2); font-size: 14px; text-align: center; }
+  [role="button"] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  [role="button"]:focus-visible { outline: 2px solid var(--wc-info); outline-offset: 2px; border-radius: 16px; }
+
+  /* ---- compact layout ---- */
+  ha-card.compact { gap: 12px; padding: 14px; }
+  .c-head { display: flex; align-items: center; gap: 12px; }
+  .c-id { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .c-name { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 100%;
+    padding: 4px 10px 4px 8px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--wc-text);
+    background: color-mix(in srgb, var(--wc-tone) 16%, var(--wc-surface));
+    box-shadow: var(--wc-lit);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .status-pill .dot { width: 8px; height: 8px; }
+  .status-pill.live .dot { animation: pulse 1.6s ease-in-out infinite; }
+  .c-power { flex: none; display: flex; align-items: baseline; gap: 4px; font-variant-numeric: tabular-nums; }
+  .c-kw { font-size: 34px; font-weight: 600; letter-spacing: -1px; line-height: 1; }
+  .c-unit { font-size: 14px; color: var(--wc-text-2); }
+  .c-stats { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--wc-text-2); padding: 10px 12px; border-radius: 14px; background: var(--wc-surface); box-shadow: var(--wc-lit); }
+  .c-stats strong { color: var(--wc-text); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .c-stats.muted strong { color: var(--wc-text-3); }
+  .stat { cursor: pointer; white-space: nowrap; }
+  .actions.small { gap: 8px; }
+  .actions.small .btn { height: 38px; font-size: 14px; gap: 6px; }
+  .actions.small .btn svg { width: 15px; height: 15px; }
+
+  /* ---- minimal layout (one row, like a tile card) ---- */
+  :host([data-layout="minimal"]) { height: 100%; }
+  ha-card.minimal { height: 100%; box-sizing: border-box; padding: 0 10px 0 10px; justify-content: center; gap: 0; border-radius: var(--ha-card-border-radius, 18px); }
+  .minimal .ambient { background: radial-gradient(70% 160% at 0% 50%, color-mix(in srgb, var(--wc-tone) 16%, transparent), transparent 70%); }
+  .m-row { display: flex; align-items: center; gap: 10px; min-height: 56px; }
+  .m-badge { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--wc-tone) 18%, transparent); }
+  .m-badge.live .dot { animation: pulse 1.6s ease-in-out infinite; }
+  .m-text { flex: 1; min-width: 0; }
+  .m-name, .m-state { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-name { font-size: 14px; font-weight: 600; line-height: 1.3; letter-spacing: -0.1px; }
+  .m-state { font-size: 12px; line-height: 1.3; color: var(--wc-text-2); }
+  .m-power { flex: none; font-size: 13px; color: var(--wc-text-2); font-variant-numeric: tabular-nums; }
+  .m-power strong { font-size: 18px; font-weight: 600; color: var(--wc-text); letter-spacing: -0.4px; }
+  .m-btn {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--wc-text);
+    background: var(--wc-glass-fill);
+    -webkit-backdrop-filter: var(--wc-glass-filter);
+    backdrop-filter: var(--wc-glass-filter);
+    box-shadow: var(--wc-glass-capsule);
+    cursor: pointer;
+    transition: transform 150ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 150ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .m-btn svg { width: 17px; height: 17px; fill: currentColor; }
+  .m-btn:active { transform: scale(0.92); filter: brightness(1.25); }
+  .m-btn:focus-visible { outline: 2px solid var(--wc-info); outline-offset: 2px; }
+  .m-btn.primary { background: color-mix(in srgb, var(--wc-text) 86%, transparent); color: var(--wallbox-on-light, #0a0b0d); }
+  .m-btn.danger { color: var(--wc-danger); }
+  .m-btn.busy { opacity: 0.6; pointer-events: none; }
 
   @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.35); opacity: 0.7; } }
   @keyframes breathe { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
   @keyframes sweep { 0% { transform: translateX(-100%); } 60%, 100% { transform: translateX(100%); } }
 
   @media (prefers-reduced-motion: reduce) {
-    .band.live::after, .band.live .dot, .gauge .glow { animation: none; }
-    .g-arc, .g-needle, .g-limit, .btn { transition: none; }
+    .band.live::after, .band.live .dot, .gauge .glow, .status-pill.live .dot, .m-badge.live .dot { animation: none; }
+    .g-arc, .g-needle, .g-limit, .btn, .m-btn { transition: none; }
   }
   @media (prefers-reduced-transparency: reduce) {
-    .btn { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--wc-surface-2); }
+    .btn, .m-btn { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--wc-surface-2); }
   }
 `;

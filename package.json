@@ -10,7 +10,7 @@
     "watch": "node build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "test": "node --test test/",
+    "test": "node --test test/*.test.ts",
     "demo": "node build.mjs && npx --yes http-server -p 5050 -c-1 ."
   },
   "dependencies": {
